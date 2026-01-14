@@ -1,0 +1,41 @@
+.imageCarousal{
+    background: rgb(255, 255, 255);
+    display: flex;
+    flex-direction: column;
+    margin: 15px 0;
+
+}
+
+.imageContainer{
+    overflow: visible;
+    border-radius: 20px;
+    height: 100px;
+    background-image:  url('/images/ram.jpeg');
+    background-size: cover;
+    background-position: center;
+    margin: 15px 0;
+}
+
+.carousalDots{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: baseline;
+    list-style-type: none;
+}
+
+.carousalDot{
+    box-sizing: border-box;
+    height: 6px;
+    width: 6px;
+    background-color: #E5EBF2;
+    border-radius: 50%;
+    margin: 2px;
+}
+
+.carousalDot--active{
+    width: 12px;
+    border-radius: 10px;
+    background-color: #2E303A;
+
+}

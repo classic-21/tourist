@@ -1,0 +1,39 @@
+.dropdown {
+  position: relative;
+  margin: 10px;
+  background: #f5f5f5;
+  padding: 10px 20px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  text-transform: capitalize;
+}
+
+.dropdownList {
+  position: absolute;
+  list-style: none;
+  top: 110%;
+  right: 0;
+  background: #f5f5f5;
+  padding: 10px 20px;
+  border-radius: 10px;
+  z-index: 100;
+  font-size: large;
+}
+
+.arrow {
+  display: inline-block;
+  margin-left: 10px;
+  width: 20px;
+  transition: all 0.2s ease;
+}
+
+.arrowExpand {
+  transform: rotate(180deg);
+}
+
+.arrowCollapse {
+  transform: rotate(0);
+}

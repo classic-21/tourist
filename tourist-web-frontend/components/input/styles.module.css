@@ -1,0 +1,13 @@
+.inputContainer{
+    border: 2px solid rgb(203, 203, 203);
+    padding: 10px;
+    margin: 15px 0;
+    border-radius: 10px;
+
+}
+
+.inputContainer input{
+    border: none;
+    outline: none;
+    width: 100%;
+}

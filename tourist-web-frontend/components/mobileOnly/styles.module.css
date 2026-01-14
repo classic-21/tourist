@@ -1,0 +1,27 @@
+
+  
+  /* Content for mobile devices */
+  .mobile-view {
+    display: block;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  /* Content for desktop devices */
+  .desktop-view {
+    display: none;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  /* Media query to toggle views */
+  @media (min-width: 768px) {
+    .mobile-view {
+      display: none;
+    }
+  
+    .desktop-view {
+      display: block;
+    }
+  }
+  

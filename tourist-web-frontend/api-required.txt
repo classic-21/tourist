@@ -1,0 +1,45 @@
+
+
+tour list
+/api/v1/tours 
+{
+    "length":1,
+    "data":[{
+        id:2134,
+        name:"agra fort",
+        "city":"agra",
+        "state":"uttar pradesh",
+        "country":"India",
+        "photo":"url"
+    }]
+}
+
+tour details
+/api/v1/tour/:id
+{
+        id:2134,
+        name:"agra fort",
+        "city":"agra",
+        "state":"uttar pradesh",
+        "country":"India",
+        "photo":"url",
+        "tourImages":["url1","url2"]
+        "description":[
+            {
+                "language":"english",
+                "content":"lorem epsem"
+            },
+          {
+                "language":"hindi",
+                "content":"lorem epsem"
+            }
+        ]
+}
+
+//music
+/api/v1/tour/music?language=english
+
+//user
+
+api/v1/users/details
+api/v1/users/booking-history

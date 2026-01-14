@@ -1,0 +1,48 @@
+.signUp{
+    display: flex;
+    flex-direction: column;
+    margin:15px;
+}
+
+.signupHeader{
+    display: flex;
+    flex-direction: row;
+    margin-top: 20px;
+    /* justify-content: center; */
+    align-items: baseline;
+}
+
+.headerbackBtn{
+    padding:5px 15px;
+    width: fit-content;
+}
+
+.signinHeader h2{
+    flex-grow: 1;
+    
+}
+
+.banner{
+    /* margin: 15px 10px; */
+    /* background-color: green; */
+    /* box-sizing: border-box; */
+}
+
+.signupForm{
+    
+}
+
+.forgotPass,.haveAccount{
+    padding: 10px;
+    color: rgb(90, 90, 90);
+    font-weight: 500;
+}
+
+.haveAccount{
+    text-align: center;
+}
+
+.forgotPass{
+    font-size: 14px;
+    padding: 5px;
+}

@@ -1,0 +1,45 @@
+.discover{
+    display: flex;
+    flex-direction: column;
+
+}
+
+.heading{
+    font-weight: 600;
+    text-align: left;
+    font-size: 24px;
+    margin: 10px;
+    
+}
+
+.searchBar{
+
+    display: flex;
+    flex-direction: row;
+    margin: 10px;
+    background: #F5F5F5;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.searchBar>input{
+    margin-left: 5px;
+    width: 100%;
+    background-color: transparent;
+}
+
+.searchBar>input:focus{
+    outline: none;
+}
+
+.bestDestinations{
+ display: flex;
+ flex-direction: column; 
+ margin: 10px;  
+}
+
+.bestDestinations>h3{
+    font-weight: bold;
+    color: #434343;
+    margin-bottom: 20px;
+}

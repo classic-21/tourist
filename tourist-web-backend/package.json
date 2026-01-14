@@ -1,0 +1,41 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx tsc",
+    "start:prod": "npx nodemon dist/index.js",
+    "start:dev": "concurrently \"npx tsc -w\" \"npx nodemon dist/index.js\"",
+    "prod": "node dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.726.1",
+    "@aws-sdk/s3-request-presigner": "3.726.1",
+    "@types/mongoose": "5.11.97",
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "2.5.1",
+    "cookie-parser": "1.4.7",
+    "cors": "2.8.5",
+    "dotenv": "16.4.5",
+    "express": "4.21.1",
+    "jsonwebtoken": "9.0.2",
+    "mongodb": "6.10.0",
+    "mongoose": "8.7.3",
+    "razorpay": "2.9.5",
+    "uuid": "11.0.5"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "1.4.7",
+    "@types/cors": "2.8.17",
+    "@types/express": "5.0.0",
+    "@types/jsonwebtoken": "9.0.7",
+    "@types/node": "22.7.6",
+    "@types/uuid": "10.0.0",
+    "concurrently": "9.0.1",
+    "typescript": "5.6.3"
+  }
+}

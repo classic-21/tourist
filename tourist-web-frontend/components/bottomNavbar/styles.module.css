@@ -1,0 +1,48 @@
+.bottomNavbar{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: baseline;
+    padding: 10px;
+    width: 100%;
+    border-top: 2px solid #E5EBF2;
+    position: sticky;
+    bottom: 0;
+    background: white; 
+    z-index: 500;
+}
+
+/* .bottomNavbarLink{
+    justify-content: center;
+    align-items: center;
+} */
+
+.navBarItem{
+    display: flex;
+    flex-direction: column;
+    padding:5px 10px;
+    flex-grow: 1;
+    align-items: center;
+    justify-items: center;
+    color: #8A8A8A;
+    font-weight: 600;
+
+}
+
+.navBarItem-active{
+    background: #dddfe2;
+    border-radius: 10px;
+    color: rgb(53, 53, 53);
+  }
+
+.navBarItemLogo{
+    height: 30px;
+    width: 30px;
+    padding: 2px;
+}
+
+.navBarItemText{
+    font-size: 12px;
+    font-weight: 500;
+   
+}
