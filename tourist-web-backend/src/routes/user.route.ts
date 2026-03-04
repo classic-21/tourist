@@ -17,6 +17,11 @@ router
 
 router
   .route("/profile")
-  .get(checkJWT, userInstance?.getUserProfile.bind(userInstance));
+  .get(checkJWT, userInstance?.getUserProfile.bind(userInstance))
+  .patch(checkJWT, userInstance?.updateUserProfile.bind(userInstance));
+
+router
+  .route("/change-password")
+  .patch(checkJWT, userInstance?.changePassword.bind(userInstance));
 
 export default router;

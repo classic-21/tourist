@@ -13,6 +13,14 @@ router
   .route("/verifyPayment/webhook")
   .post(orderControllerInstance.verifyPayment.bind(orderControllerInstance));
 
+// Get all purchased tours for the authenticated user
+router
+  .route("/purchased")
+  .get(
+    checkJWT,
+    orderControllerInstance.getPurchasedTours.bind(orderControllerInstance)
+  );
+
 // Get Order Details
 router
   .route("/:orderID")

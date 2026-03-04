@@ -1,13 +1,15 @@
-import React from 'react'
+import React from "react";
 
-const AuthLayout = ({children}:Readonly<{
-    children: React.ReactNode;
-  }>) => {
+const AuthLayout = ({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) => {
   return (
-    <>
-    {children}
-    </>
-  )
-}
+    <div style={{ maxWidth: "700px", margin: "0 auto" }}>
+      {children}
+    </div>
+  );
+};
 
-export default AuthLayout
+export default AuthLayout;

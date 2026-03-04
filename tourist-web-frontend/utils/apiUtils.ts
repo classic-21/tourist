@@ -1,50 +1,57 @@
-const apiRoutes = {
+const apiRoutes: Record<string, string> = {
   getTourList: "tours/all",
   getTourDetails: "tours/:id",
   login: "users/login",
   signup: "users/create",
   getAllImages: "getAllImages",
   profile: "users/profile",
+  updateProfile: "users/profile",
+  changePassword: "users/change-password",
   order: "orders/:id",
   confirmOrder: "orders/:id",
-  checkSubscription: "orders/:id/tour"
+  checkSubscription: "orders/:id/tour",
+  getPurchasedTours: "orders/purchased",
+  getReviews: "reviews/:tourID",
+  addReview: "reviews/:tourID",
+  getLiked: "likes",
+  getLikedIDs: "likes/ids",
+  toggleLike: "likes/:tourID",
 };
-
-// const API_ENDPOINT = "https://qa.indianarrated.com/api/v1/";
 
 const createUrl = (apiRoute: string, id?: string | number): string => {
   let route = apiRoutes[apiRoute];
 
-  // Replace the :id placeholder only if id is provided
-  if (id) {
-    route = route.replace(':id', id.toString());
+  if (!route) {
+    console.warn(`Unknown apiRoute: "${apiRoute}"`);
+    return process.env.NEXT_PUBLIC_API_ENDPOINT + apiRoute;
   }
+
+  // Replace the :id placeholder only if id is provided
+  if (id !== undefined) {
+    route = route.replace(":id", id.toString()).replace(":tourID", id.toString());
+  }
+
   return process.env.NEXT_PUBLIC_API_ENDPOINT + route;
 };
 
 
 const fetchAPI = async (url: string, requestMethod: string, requestBody?: any, bearerToken?: string) => {
-  // console.log(url, requestMethod, requestBody);
-  
   try {
-    const headers: any = {
-      'Content-Type': 'application/json'
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
     };
 
-    // Add Authorization header if bearerToken is provided
     if (bearerToken) {
-      headers['Authorization'] = `Bearer ${bearerToken}`;
+      headers["Authorization"] = `Bearer ${bearerToken}`;
     }
 
-    // Create the fetch options object
-    const options: any = {
+    const options: RequestInit = {
       method: requestMethod,
-      headers: headers,
-      credentials: 'include'
+      headers,
+      credentials: "include",
     };
 
-    // Only add body if the request method supports it and requestBody is provided
-    if (requestMethod !== 'GET' && requestBody) {
+    if (requestMethod !== "GET" && requestBody) {
       options.body = JSON.stringify(requestBody);
     }
 
@@ -54,14 +61,12 @@ const fetchAPI = async (url: string, requestMethod: string, requestBody?: any, b
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const jsonData = await response.json();
-    // console.log("data: ", jsonData)
-    return jsonData;
+    return await response.json();
   } catch (err) {
-    console.error("Some error has occurred!", err);
+    console.error("API error:", err);
     throw err;
   }
 };
 
 
-export { apiRoutes, createUrl ,fetchAPI};
+export { apiRoutes, createUrl, fetchAPI };

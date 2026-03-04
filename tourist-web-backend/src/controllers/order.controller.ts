@@ -419,4 +419,49 @@ export class OrderController {
 
     return;
   }
+
+  async getPurchasedTours(req: Request, res: Response): Promise<void> {
+    const { userID } = req as GlobalRequestDTO;
+
+    if (!userID) {
+      res.status(401).json(createResponseObject(401, "Unauthorized Access"));
+      return;
+    }
+
+    try {
+      const purchasedTours = await PurchasedTour.find({ userID })
+        .populate("tourID", "name place amount")
+        .populate("orderID", "createdAt")
+        .sort({ createdAt: -1 });
+
+      const response = purchasedTours.map((pt) => {
+        const tour = pt.tourID as any;
+        const order = pt.orderID as any;
+        return {
+          tourID: tour?._id,
+          name: tour?.name,
+          place: tour?.place,
+          amount: tour?.amount,
+          date: order?.createdAt
+            ? new Date(order.createdAt).toLocaleDateString("en-IN", {
+                year: "numeric",
+                month: "long",
+              })
+            : null,
+        };
+      });
+
+      res
+        .status(200)
+        .json(
+          createResponseObject(200, "Purchased tours fetched successfully", response)
+        );
+    } catch (error) {
+      res
+        .status(500)
+        .json(createResponseObject(500, "Internal Server Error"));
+    }
+
+    return;
+  }
 }

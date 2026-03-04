@@ -19,6 +19,10 @@ export async function getS3PresignedUrl(
   key: string,
   expiry?: number
 ): Promise<string> {
+  // DEV: skip S3 calls when credentials are placeholders
+  if (!bucket || bucket === "placeholder" || !process.env.AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID === "placeholder") {
+    return "";
+  }
   const s3Client = getS3ClientInstance();
   const params = {
     Bucket: bucket,
@@ -39,6 +43,10 @@ export async function getS3PresignedUrl(
 }
 
 export const getPresignedUrlsForFolder = async (folderName: string) => {
+  // DEV: skip S3 calls when credentials are placeholders
+  if (!bucket || bucket === "placeholder" || !process.env.AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID === "placeholder") {
+    return [];
+  }
   const s3Client = getS3ClientInstance();
   try {
     // list objects in the folder
@@ -76,7 +84,8 @@ export const getPresignedUrlsForFolder = async (folderName: string) => {
 
     return presignedUrls;
   } catch (error) {
+    // DEV: changed from `throw error` to `return []` so server doesn't crash when S3 creds are placeholder
     console.error("Error fetching presigned URLs:", error);
-    throw error;
+    return [];
   }
 };

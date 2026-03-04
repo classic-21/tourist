@@ -9,68 +9,53 @@ import { createUrl, fetchAPI } from "@/utils/apiUtils";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const SignIn = () => {
   const router = useRouter();
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Check if the user is already signed in
     const authToken = localStorage.getItem("authToken");
     if (authToken) {
-      // If a token exists, redirect to the discover page (or wherever appropriate)
       router.push("/discover");
     }
-  }, [router]); // Make sure to rerun the effect if router changes
+  }, [router]);
 
   const handleSignin = async () => {
-    let email;
-    let password;
-    if (emailRef.current && passwordRef.current) {
-      email = emailRef.current.value;
-      password = passwordRef.current.value;
-    } else {
-      toast("Something went wrong!");
+    const email = emailRef.current?.value?.trim() ?? "";
+    const password = passwordRef.current?.value ?? "";
+
+    if (!email) {
+      toast("Please enter your email.");
       return;
     }
 
-    // Validation check
-    if (email.length == 0) {
-      toast("Please enter your email.");
+    if (!emailRegex.test(email)) {
+      toast("Please enter a valid email address.");
       return;
-    } else if (password.length == 0) {
-      toast("Password enter your password.");
+    }
+
+    if (!password) {
+      toast("Please enter your password.");
       return;
-    } 
+    }
+
     try {
       const responseData = await fetchAPI(createUrl("login"), "post", {
         email,
         password,
       });
 
-      // console.log(responseData);
-
-      // Check for successful login response
-
       if (responseData.statusCode === 200) {
-        
         localStorage.setItem("authToken", responseData.data.accessToken);
         router.push("/discover");
-
       } else {
-        // Check for incorrect password
-        if (responseData.message === "Invalid credentials") {
-          toast("Incorrect email or password. Please try again.");
-        } else {
-          toast(responseData.message);
-        }
+        toast(responseData.message || "Incorrect email or password. Please try again.");
       }
-    } catch (error) {
-      // Handle network errors or issues with the API
-      console.error("Error during sign-in:", error);
-      toast(
-        "Unable to sign in. Please check your connection or try again later."
-      );
+    } catch {
+      toast("Unable to sign in. Please check your connection or try again later.");
     }
   };
 
@@ -89,7 +74,7 @@ const SignIn = () => {
         <ImageCarousal />
       </div>
 
-      <form className={styles.signinForm}>
+      <form className={styles.signinForm} onSubmit={(e) => { e.preventDefault(); handleSignin(); }}>
         <Input
           type="email"
           placeholder="Enter your email"
@@ -102,13 +87,20 @@ const SignIn = () => {
           inputRef={passwordRef}
         />
 
-        <p className={styles.forgotPass}>Forgot password?</p>
+        <p
+          className={styles.forgotPass}
+          onClick={() => toast("Password reset is coming soon. Please contact support.")}
+          style={{ cursor: "pointer" }}
+        >
+          Forgot password?
+        </p>
 
-        <div style={{ marginTop: "15%" }} onClick={() => handleSignin()}>
+        <div style={{ marginTop: "15%" }}>
           <Button
             text={"Sign In"}
             backgroundColor={"#000"}
             textColor={"#FFF"}
+            callMethod={handleSignin}
           />
         </div>
 

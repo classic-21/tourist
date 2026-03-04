@@ -8,24 +8,42 @@ import { useRouter } from "next/navigation";
 import LoadingComponent from "@/components/LoadingComponent/LoadingComponent";
 import Image from "next/image";
 
-// Function to generate slug from destination name
-const generateSlug = (name: string) => {
-  return name
+const generateSlug = (name: string) =>
+  name
     .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '');
-};
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]+/g, "");
+
+interface Destination {
+  id: string;
+  name: string;
+  place: string;
+  amount: number;
+  imgUrl: string | null;
+  navigateTo: string;
+}
+
+interface Filters {
+  minPrice: string;
+  maxPrice: string;
+  place: string;
+}
 
 const Discover = () => {
-  const [tourDetails, setTourDetails] = useState(null);
-  const [tourImages, setTourImages] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(""); // Track search input
-  const [filteredDestinations, setFilteredDestinations] = useState([]); // Store filtered destinations
-  const [error, setError] = useState(null); // Track API errors
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<Filters>({ minPrice: "", maxPrice: "", place: "" });
+  const [activeFilters, setActiveFilters] = useState<Filters>({ minPrice: "", maxPrice: "", place: "" });
 
   const router = useRouter();
 
-  // Fetch tour details and images on component mount
+  // Unique places derived from destinations for the place filter dropdown
+  const uniquePlaces = Array.from(new Set(destinations.map((d) => d.place))).sort();
+
   useEffect(() => {
     const token = localStorage.getItem("authToken");
 
@@ -34,56 +52,46 @@ const Discover = () => {
       return;
     }
 
-    const fetchTourDetails = async () => {
+    const fetchData = async () => {
       try {
-        const data1 = await fetchAPI(createUrl("getTourList"), "GET", {}, token);
-        const data2 = await fetchAPI(createUrl("getAllImages"), "GET", {}, token);
+        const [tourList, imageData, likedIdsRes] = await Promise.all([
+          fetchAPI(createUrl("getTourList"), "GET", {}, token),
+          fetchAPI(createUrl("getAllImages"), "GET", {}, token),
+          fetchAPI(createUrl("getLikedIDs"), "GET", {}, token).catch(() => null),
+        ]);
 
-        setTourDetails(data1);
-        setTourImages(data2);
-      } catch (error) {
-        console.error("Error fetching tour details or images:", error);
-        setError("We are having some trouble while processing your request. Please try again later.");
-      }
-    };
+        if (Array.isArray(likedIdsRes?.data)) {
+          setLikedIds(new Set(likedIdsRes.data));
+        }
 
-    fetchTourDetails();
-  }, [router]);
-
-  // Filter destinations based on search query
-  useEffect(() => {
-    if (tourDetails && tourImages) {
-      try {
-        const mergedData = tourDetails?.data.map((item) => {
-          const imageData = tourImages?.newData.data[item.mappingID];
-          const imageURL = imageData ? imageData[0].url : null;
-          const slug = generateSlug(item.name);
-
+        const merged: Destination[] = (tourList?.data ?? []).map((item: { id: string; name: string; place: string; mappingID: number; amount: number }) => {
+          const imgs = imageData?.newData?.data?.[item.mappingID];
+          const imgUrl = Array.isArray(imgs) && imgs.length > 0 ? imgs[0].url : null;
           return {
             id: item.id,
             name: item.name,
             place: item.place,
-            imgUrl: imageURL,
-            navigateTo: `/tourDetails/${slug}`,
+            amount: item.amount ?? 0,
+            imgUrl,
+            navigateTo: `/tourDetails/${generateSlug(item.name)}`,
           };
         });
 
-        const filtered = searchQuery ? mergedData.filter((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase())) : mergedData;
-
-        setFilteredDestinations(filtered);
-      } catch (error) {
-        console.error("Error processing tour details and images:", error);
-        setFilteredDestinations([]); // Optionally, set empty list on error
+        setDestinations(merged);
+      } catch {
+        setError("We are having some trouble loading destinations. Please try again later.");
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [tourDetails, tourImages, searchQuery]);
+    };
 
-  // Handle loading, no destinations, or error scenarios
-  if (!tourDetails || !tourImages) {
+    fetchData();
+  }, [router]);
+
+  if (loading) {
     return <LoadingComponent />;
   }
 
-  // If API error exists, show the error screen
   if (error) {
     return (
       <ShowError
@@ -93,16 +101,48 @@ const Discover = () => {
       />
     );
   }
-  // If no destinations are found
-  else if (filteredDestinations.length === 0) {
-    return (
-      <ShowError
-        imageSrc="/images/sorry_vector.png"
-        heading="No destinations found"
-        paragraph="Sorry, no destinations match your search. Please try again."
-      />
-    );
-  }
+
+  const handleLikeToggle = (tourId: string, newLikedState: boolean) => {
+    setLikedIds((prev) => {
+      const next = new Set(prev);
+      if (newLikedState) next.add(tourId);
+      else next.delete(tourId);
+      return next;
+    });
+  };
+
+  const applyFilters = () => {
+    setActiveFilters({ ...filters });
+    setShowFilters(false);
+  };
+
+  const clearFilters = () => {
+    const empty = { minPrice: "", maxPrice: "", place: "" };
+    setFilters(empty);
+    setActiveFilters(empty);
+  };
+
+  const hasActiveFilters =
+    activeFilters.minPrice !== "" ||
+    activeFilters.maxPrice !== "" ||
+    activeFilters.place !== "";
+
+  const filtered = destinations.filter((d) => {
+    // Text search
+    if (
+      searchQuery &&
+      !d.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !d.place.toLowerCase().includes(searchQuery.toLowerCase())
+    ) {
+      return false;
+    }
+    // Place filter
+    if (activeFilters.place && d.place !== activeFilters.place) return false;
+    // Price filter
+    if (activeFilters.minPrice !== "" && d.amount < Number(activeFilters.minPrice)) return false;
+    if (activeFilters.maxPrice !== "" && d.amount > Number(activeFilters.maxPrice)) return false;
+    return true;
+  });
 
   return (
     <div className={styles.discover}>
@@ -112,33 +152,124 @@ const Discover = () => {
         through audio!
       </h1>
 
-      <div className={styles.searchBar}>
-        <Image
-          src={"/icons/Magnifer.svg"}
-          width={20}
-          height={20}
-          alt="search logo"
-        />
-        <input
-          type="text"
-          placeholder="Explore landmarks and history..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)} // Update search query on change
-        />
+      {/* Search + Filter row */}
+      <div className="flex gap-2 mx-[10px]">
+        <div className={styles.searchBar} style={{ flex: 1, margin: 0 }}>
+          <Image src={"/icons/Magnifer.svg"} width={20} height={20} alt="search" />
+          <input
+            type="text"
+            placeholder="Explore landmarks and history..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <button
+          onClick={() => setShowFilters((v) => !v)}
+          className={`flex items-center gap-1 px-3 rounded-[10px] text-sm font-medium transition-colors ${
+            hasActiveFilters
+              ? "bg-[#8E170D] text-white"
+              : "bg-[#f5f5f5] text-gray-600"
+          }`}
+          aria-label="Toggle filters"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+            <line x1="11" y1="18" x2="13" y2="18" />
+          </svg>
+          {hasActiveFilters ? "Filtered" : "Filter"}
+        </button>
       </div>
 
-      <div className={styles.bestDestinations}>
-        <h3>Best Destinations</h3>
-        {filteredDestinations.map((item) => (
-          <DestinationCard
-            key={item.id}
-            destination={item.name}
-            location={item.place}
-            imgUrl={item.imgUrl}
-            navigateTo={item.navigateTo}
-            tourId={item.id}
+      {/* Filter Panel */}
+      {showFilters && (
+        <div className="mx-[10px] mt-2 p-4 bg-white rounded-xl border border-gray-100 shadow-md">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm font-semibold text-gray-700">Filters</span>
+            {hasActiveFilters && (
+              <button onClick={clearFilters} className="text-xs text-[#8E170D] underline">
+                Clear all
+              </button>
+            )}
+          </div>
+
+          {/* Place filter */}
+          <div className="mb-3">
+            <label className="block text-xs text-gray-500 mb-1">Location</label>
+            <select
+              value={filters.place}
+              onChange={(e) => setFilters((f) => ({ ...f, place: e.target.value }))}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#8E170D] bg-white"
+            >
+              <option value="">All locations</option>
+              {uniquePlaces.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Price range */}
+          <div className="mb-4">
+            <label className="block text-xs text-gray-500 mb-1">Price range (₹)</label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="number"
+                placeholder="Min"
+                value={filters.minPrice}
+                onChange={(e) => setFilters((f) => ({ ...f, minPrice: e.target.value }))}
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#8E170D]"
+                min={0}
+              />
+              <span className="text-gray-400 text-sm">–</span>
+              <input
+                type="number"
+                placeholder="Max"
+                value={filters.maxPrice}
+                onChange={(e) => setFilters((f) => ({ ...f, maxPrice: e.target.value }))}
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#8E170D]"
+                min={0}
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={applyFilters}
+            className="w-full py-2 rounded-lg bg-[#8E170D] text-white text-sm font-semibold"
+          >
+            Apply Filters
+          </button>
+        </div>
+      )}
+
+      <div className={styles.bestDestinations} style={{ marginTop: "16px" }}>
+        <h3>
+          Best Destinations
+          {hasActiveFilters && (
+            <span className="text-xs font-normal text-gray-400 ml-2">
+              ({filtered.length} result{filtered.length !== 1 ? "s" : ""})
+            </span>
+          )}
+        </h3>
+        {filtered.length === 0 ? (
+          <ShowError
+            imageSrc="/images/sorry_vector.png"
+            heading="No destinations found"
+            paragraph="No destinations match your search or filters. Try adjusting them."
           />
-        ))}
+        ) : (
+          filtered.map((item) => (
+            <DestinationCard
+              key={item.id}
+              destination={item.name}
+              location={item.place}
+              imgUrl={item.imgUrl}
+              navigateTo={item.navigateTo}
+              tourId={item.id}
+              isLiked={likedIds.has(item.id)}
+              onLikeToggle={handleLikeToggle}
+            />
+          ))
+        )}
       </div>
     </div>
   );

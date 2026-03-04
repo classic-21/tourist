@@ -9,52 +9,62 @@ import { createUrl, fetchAPI } from "@/utils/apiUtils";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const SignUp = () => {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if the user is already signed in
     const authToken = localStorage.getItem("authToken");
     if (authToken) {
-      // If a token exists, redirect to the discover page (or wherever appropriate)
       router.push("/discover");
     }
-  }, [router]); // Make sure to rerun the effect if router changes
+  }, [router]);
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
   const handleSignup = async () => {
-    if (!emailRef.current || !passwordRef.current || !nameRef.current) {
-      toast("Something went wrong!");
+    const name = nameRef.current?.value?.trim() ?? "";
+    const email = emailRef.current?.value?.trim() ?? "";
+    const password = passwordRef.current?.value ?? "";
+
+    if (!name) {
+      toast("Please enter your name.");
       return;
     }
 
-    const name = nameRef.current.value;
-    const email = emailRef.current.value;
-    const password = passwordRef.current.value;
+    if (!email) {
+      toast("Please enter your email.");
+      return;
+    }
 
-    // console.log(name, email, password);
+    if (!emailRegex.test(email)) {
+      toast("Please enter a valid email address.");
+      return;
+    }
 
-    // if (name.length == 0 || email.length == 0 || password.length < 5) {
-    //   console.log("please enter the correct details");
+    if (password.length < 8) {
+      toast("Password must be at least 8 characters.");
+      return;
+    }
 
-    //   return;
-    // }
+    try {
+      const responseData = await fetchAPI(createUrl("signup"), "post", {
+        name,
+        email,
+        password,
+      });
 
-    const responseData = await fetchAPI(createUrl("signup"), "post", {
-      name,
-      email,
-      password,
-    });
-
-    console.log(responseData);
-
-    if (responseData.statusCode == 200) {
-      router.push("/sign-in");
-    } else {
-      toast(responseData.message);
+      if (responseData?.statusCode === 200) {
+        toast("Account created! Please sign in.");
+        router.push("/sign-in");
+      } else {
+        toast(responseData?.message || "Something went wrong!");
+      }
+    } catch {
+      toast("Something went wrong. Please try again.");
     }
   };
 
@@ -73,27 +83,29 @@ const SignUp = () => {
         <ImageCarousal />
       </div>
 
-      <form className={styles.signupForm}>
+      <form className={styles.signupForm} onSubmit={(e) => { e.preventDefault(); handleSignup(); }}>
         <Input type="text" placeholder="Enter your name" inputRef={nameRef} />
         <Input
           type="email"
           placeholder="Enter your email"
           inputRef={emailRef}
         />
-
         <Input
           type="password"
-          placeholder="Enter your password"
+          placeholder="Enter your password (min 8 chars)"
           inputRef={passwordRef}
         />
 
-        <p className={styles.forgotPass}>Forgot password?</p>
+        <p className="text-xs text-gray-400 px-1 mt-1">
+          Password must be at least 8 characters.
+        </p>
 
-        <div style={{ marginTop: "15%" }} onClick={() => handleSignup()}>
+        <div style={{ marginTop: "15%" }}>
           <Button
             text={"Sign Up"}
             backgroundColor={"#000"}
             textColor={"#FFF"}
+            callMethod={handleSignup}
           />
         </div>
 

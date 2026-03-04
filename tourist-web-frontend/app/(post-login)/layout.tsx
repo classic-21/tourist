@@ -8,20 +8,23 @@ const PostLoginLayout = ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  const [token, setToken] = useState(null);
+  const [hasToken, setHasToken] = useState(false);
 
   useEffect(() => {
-    const authToken = localStorage.getItem("authToken");
-
-    if (authToken) {
-      setToken(authToken);
-    }
+    setHasToken(!!localStorage.getItem("authToken"));
   }, []);
 
   return (
-    <div style={{ position: "relative" }}>
+    <div
+      style={{
+        maxWidth: "700px",
+        margin: "0 auto",
+        position: "relative",
+        minHeight: "100vh",
+      }}
+    >
       {children}
-      {token ? <BottomNavbar /> : <></>}
+      {hasToken && <BottomNavbar />}
     </div>
   );
 };

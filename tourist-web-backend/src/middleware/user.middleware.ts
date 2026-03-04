@@ -8,6 +8,19 @@ export async function checkJWT(
   res: Response,
   next: NextFunction
 ) {
+  if (process.env.NODE_ENV === "development") {
+    const devUserID = process.env.DEV_USER_ID;
+    if (!devUserID) {
+      res.status(500).json({
+        statusCode: 500,
+        message: "DEV_USER_ID not set in .env — required when NODE_ENV=development",
+      });
+      return;
+    }
+    (req as GlobalRequestDTO).userID = devUserID;
+    return next();
+  }
+
   const authorization =
     req?.headers?.["authorization"] || req?.body?.accessToken;
 
@@ -47,7 +60,7 @@ export async function checkJWT(
   const userID = accessTokenDetails?.id;
   const userDetails = await User.findById(userID);
 
-  if (!userDetails || !userDetails || Object.keys(userDetails)?.length === 0) {
+  if (!userDetails || Object.keys(userDetails).length === 0) {
     res.status(401).json({
       statusCode: 401,
       message: "Unauthorized Access",
@@ -56,6 +69,23 @@ export async function checkJWT(
   }
 
   (req as GlobalRequestDTO).userID = userID as string;
+
+  next();
+}
+
+export function checkAdmin(req: Request, res: Response, next: NextFunction) {
+  const adminToken = req.headers["x-admin-token"];
+  const expectedToken = process.env.ADMIN_SECRET;
+
+  if (!expectedToken) {
+    res.status(500).json({ statusCode: 500, message: "Admin secret not configured" });
+    return;
+  }
+
+  if (!adminToken || adminToken !== expectedToken) {
+    res.status(403).json({ statusCode: 403, message: "Admin access required" });
+    return;
+  }
 
   next();
 }

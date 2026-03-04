@@ -2,13 +2,20 @@
   position: relative;
   margin: 10px;
   background: #f5f5f5;
-  padding: 10px 20px;
+  padding: 8px 14px;
   border-radius: 10px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-evenly;
-  text-transform: capitalize;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.selectedLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #434343;
 }
 
 .dropdownList {
@@ -16,18 +23,45 @@
   list-style: none;
   top: 110%;
   right: 0;
-  background: #f5f5f5;
-  padding: 10px 20px;
+  background: #fff;
+  border: 1px solid #e5ebf2;
+  padding: 6px 0;
   border-radius: 10px;
-  z-index: 100;
-  font-size: large;
+  z-index: 200;
+  min-width: 130px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dropdownList li {
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #434343;
+  text-transform: capitalize;
+}
+
+.dropdownList li:hover {
+  background: #f5f5f5;
+}
+
+.activeItem {
+  font-weight: 600;
+  color: #8e170d !important;
+}
+
+.checkmark {
+  font-size: 12px;
+  color: #8e170d;
+  margin-left: 8px;
 }
 
 .arrow {
   display: inline-block;
-  margin-left: 10px;
-  width: 20px;
-  transition: all 0.2s ease;
+  width: 16px;
+  transition: transform 0.2s ease;
 }
 
 .arrowExpand {
@@ -35,5 +69,5 @@
 }
 
 .arrowCollapse {
-  transform: rotate(0);
+  transform: rotate(0deg);
 }

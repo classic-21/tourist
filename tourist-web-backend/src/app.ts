@@ -6,6 +6,8 @@ import StaticRouter from "./routes/static.route.js";
 import TourRouter from "./routes/tour.route.js";
 import PurchasedTourRouter from "./routes/purchasedTour.route.js";
 import OrderRouter from "./routes/order.route.js";
+import ReviewRouter from "./routes/review.route.js";
+import LikeRouter from "./routes/like.route.js";
 
 const app = express();
 
@@ -17,8 +19,8 @@ const corsOptions = {
     "https://www.indianarrated.com",
   ], // Allow requests from this origin
   credentials: true, // Allow cookies and credentials
-  methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
-  allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods
+  allowedHeaders: ["Content-Type", "Authorization", "x-admin-token"], // Allowed headers
 };
 
 app.use(cors(corsOptions));
@@ -39,5 +41,7 @@ app.use("/api/v1", StaticRouter);
 app.use("/api/v1/tours", TourRouter);
 app.use("/api/v1/purchased", PurchasedTourRouter);
 app.use("/api/v1/orders/", OrderRouter);
+app.use("/api/v1/reviews", ReviewRouter);
+app.use("/api/v1/likes", LikeRouter);
 
 export default app;

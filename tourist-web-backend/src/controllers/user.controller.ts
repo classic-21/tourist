@@ -56,7 +56,7 @@ export class UsersController {
 
     if (!password) {
       res.status(411).json({
-        statusCode: 41,
+        statusCode: 411,
         message: "Password is required",
       });
       return;
@@ -87,12 +87,11 @@ export class UsersController {
         email,
         password,
       });
-    } catch (error) {
+    } catch {
       res.status(500).json({
         statusCode: 500,
         message: "Internal Server Error",
       });
-      res.status(500).json({ statusCode: 500, message: JSON.stringify(error) });
       return;
     }
 
@@ -292,6 +291,74 @@ export class UsersController {
       message: "User logged out!",
     });
 
+    return;
+  }
+
+  async updateUserProfile(req: Request, res: Response): Promise<void> {
+    const userID = (req as GlobalRequestDTO)?.userID;
+
+    if (!userID) {
+      res.status(401).json({ statusCode: 401, message: "Unauthorized Access" });
+      return;
+    }
+
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      res.status(411).json({ statusCode: 411, message: "Name is required" });
+      return;
+    }
+
+    try {
+      await User.findByIdAndUpdate(userID, { $set: { name: name.trim() } });
+      res.status(200).json({ statusCode: 200, message: "Profile updated successfully" });
+    } catch {
+      res.status(500).json({ statusCode: 500, message: "Internal Server Error" });
+    }
+    return;
+  }
+
+  async changePassword(req: Request, res: Response): Promise<void> {
+    const userID = (req as GlobalRequestDTO)?.userID;
+
+    if (!userID) {
+      res.status(401).json({ statusCode: 401, message: "Unauthorized Access" });
+      return;
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      res.status(411).json({ statusCode: 411, message: "Current and new password are required" });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res.status(411).json({ statusCode: 411, message: "New password must be at least 8 characters" });
+      return;
+    }
+
+    try {
+      const userDetails = (await User.findById(userID)) as UserDTO;
+
+      if (!userDetails) {
+        res.status(401).json({ statusCode: 401, message: "Unauthorized Access" });
+        return;
+      }
+
+      const isPasswordCorrect = await userDetails.checkPassword(currentPassword);
+      if (!isPasswordCorrect) {
+        res.status(401).json({ statusCode: 401, message: "Current password is incorrect" });
+        return;
+      }
+
+      userDetails.password = newPassword;
+      await (userDetails as any).save();
+
+      res.status(200).json({ statusCode: 200, message: "Password changed successfully" });
+    } catch {
+      res.status(500).json({ statusCode: 500, message: "Internal Server Error" });
+    }
     return;
   }
 
