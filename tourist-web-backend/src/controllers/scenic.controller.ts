@@ -61,7 +61,11 @@ export class ScenicController {
         return;
       }
 
-      const audioUrl = await getS3PresignedUrl(audioEntry.s3Key, 3600);
+      // TODO: replace with S3 presigned URL when S3 is configured
+      // const audioUrl = await getS3PresignedUrl(audioEntry.s3Key, 3600);
+      const audioUrl = audioEntry.s3Key.startsWith("http")
+        ? audioEntry.s3Key
+        : await getS3PresignedUrl(audioEntry.s3Key, 3600);
 
       res.status(200).json(
         createResponseObject(200, "Audio URL fetched successfully", {
