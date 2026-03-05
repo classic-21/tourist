@@ -171,10 +171,10 @@ const PlaceDetail = () => {
       {/* Cover image */}
       <div className="relative w-full" style={{ height: "200px" }}>
         <img
-          src={"/images/agra.png"}
+          src={place.imageUrl || "/images/taj_mahal.jpg"}
           alt={place.name}
           className="w-full h-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).src = "/images/agra.png"; }}
+          onError={(e) => { (e.target as HTMLImageElement).src = "/images/taj_mahal.jpg"; }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
         <div className="absolute bottom-3 left-4 text-white">

@@ -171,10 +171,10 @@ const DistrictDetail = () => {
       {/* Cover image */}
       <div className="relative w-full" style={{ height: "220px" }}>
         <img
-          src={"/images/agra.png"}
+          src={district.imageUrl || "/images/taj_mahal.jpg"}
           alt={district.name}
           className="w-full h-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).src = "/images/agra.png"; }}
+          onError={(e) => { (e.target as HTMLImageElement).src = "/images/taj_mahal.jpg"; }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
         <div className="absolute bottom-3 left-4 text-white">
@@ -219,10 +219,10 @@ const DistrictDetail = () => {
                 className="flex items-center gap-4 p-4 rounded-xl bg-[#F5F5F5] shadow-sm text-left w-full"
               >
                 <img
-                  src={"/images/agra.png"}
+                  src={place.imageUrl || "/images/taj_mahal.jpg"}
                   alt={place.name}
                   className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                  onError={(e) => { (e.target as HTMLImageElement).src = "/images/agra.png"; }}
+                  onError={(e) => { (e.target as HTMLImageElement).src = "/images/taj_mahal.jpg"; }}
                 />
                 <div className="flex-1">
                   <h3 className="text-sm font-semibold text-gray-800">{place.name}</h3>
