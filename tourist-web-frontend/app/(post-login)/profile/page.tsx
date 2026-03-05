@@ -14,31 +14,42 @@ interface ProfileData {
   email: string;
 }
 
-interface PurchasedTour {
-  tourID: string;
+interface PurchasedDistrict {
+  districtID: string;
   name?: string;
-  place?: string;
-  image?: string;
-  date?: string;
+  state?: string;
   amount?: number;
+  date?: string;
+  imageUrl?: string;
 }
 
-// Sample shown when no real purchases exist (for dev/demo navigation)
-const SAMPLE_TOUR: PurchasedTour = {
-  tourID: "sample",
-  name: "Agra Fort",
-  place: "Agra, Uttar Pradesh",
-  date: "September 2024",
-  amount: 399,
-  image: "/images/agra.png",
+interface PurchasedPlace {
+  placeID: string;
+  name?: string;
+  districtID?: string;
+  amount?: number;
+  date?: string;
+  imageUrl?: string;
+}
+
+// Sample shown when no real purchases exist (for dev/demo)
+const SAMPLE_DISTRICT: PurchasedDistrict = {
+  districtID: "sample",
+  name: "Agra",
+  state: "Uttar Pradesh",
+  date: "March 2026",
+  amount: 199,
 };
 
 type ActiveSection = "main" | "editProfile" | "changePassword";
+type PurchaseTab = "districts" | "places";
 
 const Profile = () => {
   const router = useRouter();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [purchasedTours, setPurchasedTours] = useState<PurchasedTour[]>([]);
+  const [purchasedDistricts, setPurchasedDistricts] = useState<PurchasedDistrict[]>([]);
+  const [purchasedPlaces, setPurchasedPlaces] = useState<PurchasedPlace[]>([]);
+  const [purchaseTab, setPurchaseTab] = useState<PurchaseTab>("districts");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [activeSection, setActiveSection] = useState<ActiveSection>("main");
 
@@ -66,11 +77,17 @@ const Profile = () => {
       }
     };
 
-    const fetchPurchasedTours = async () => {
+    const fetchPurchases = async () => {
       try {
-        const data = await fetchAPI(createUrl("getPurchasedTours"), "GET", null, token);
-        if (data?.statusCode === 200 && Array.isArray(data?.data)) {
-          setPurchasedTours(data.data);
+        const [distRes, placeRes] = await Promise.all([
+          fetchAPI(createUrl("getPurchasedDistricts"), "GET", null, token).catch(() => null),
+          fetchAPI(createUrl("getPurchasedPlaces"), "GET", null, token).catch(() => null),
+        ]);
+        if (distRes?.statusCode === 200 && Array.isArray(distRes?.data)) {
+          setPurchasedDistricts(distRes.data);
+        }
+        if (placeRes?.statusCode === 200 && Array.isArray(placeRes?.data)) {
+          setPurchasedPlaces(placeRes.data);
         }
       } catch {
         // Silently fall back to sample
@@ -78,7 +95,7 @@ const Profile = () => {
     };
 
     fetchProfile();
-    fetchPurchasedTours();
+    fetchPurchases();
   }, []);
 
   const confirmLogout = async () => {
@@ -166,10 +183,6 @@ const Profile = () => {
       setSavingPassword(false);
     }
   };
-
-  // Use real tours if available, otherwise show sample for dev/demo
-  const toursToShow: PurchasedTour[] =
-    purchasedTours.length > 0 ? purchasedTours : [SAMPLE_TOUR];
 
   if (activeSection === "editProfile") {
     return (
@@ -269,6 +282,8 @@ const Profile = () => {
     );
   }
 
+  const showSampleDistrict = purchasedDistricts.length === 0;
+
   return (
     <>
       {/* Logout Confirmation Modal */}
@@ -351,54 +366,107 @@ const Profile = () => {
           </button>
         </div>
 
-        {/* My Tours */}
+        {/* My Purchases */}
         <div className="rounded-lg shadow-sm mb-4 bg-[#F5F5F5] overflow-hidden">
           <h3 className="px-4 pt-3 pb-1 text-lg font-medium text-gray-800">
-            My Tours
+            My Purchases
           </h3>
-          {purchasedTours.length === 0 && (
-            <p className="px-4 pb-1 text-xs text-gray-400">
-              Sample tour shown for preview — your purchases will appear here.
-            </p>
+
+          {/* Tabs */}
+          <div className="flex border-b border-gray-100 px-4 gap-4">
+            <button
+              onClick={() => setPurchaseTab("districts")}
+              className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
+                purchaseTab === "districts"
+                  ? "border-[#8E170D] text-[#8E170D]"
+                  : "border-transparent text-gray-500"
+              }`}
+            >
+              Districts
+            </button>
+            <button
+              onClick={() => setPurchaseTab("places")}
+              className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
+                purchaseTab === "places"
+                  ? "border-[#8E170D] text-[#8E170D]"
+                  : "border-transparent text-gray-500"
+              }`}
+            >
+              Places
+            </button>
+          </div>
+
+          {purchaseTab === "districts" && (
+            <>
+              {showSampleDistrict && (
+                <p className="px-4 pb-1 pt-2 text-xs text-gray-400">
+                  Sample shown for preview — your purchased districts appear here.
+                </p>
+              )}
+              {(showSampleDistrict ? [SAMPLE_DISTRICT] : purchasedDistricts).map((d, i) => (
+                <button
+                  key={d.districtID || i}
+                  onClick={() => !showSampleDistrict && router.push(`/district/${d.districtID}`)}
+                  className="flex items-center gap-4 p-4 border-t border-gray-100 w-full text-left"
+                >
+                  <img
+                    src={"/images/agra.png"}
+                    alt={d.name || "District"}
+                    className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                    onError={(e) => { (e.target as HTMLImageElement).src = "/images/agra.png"; }}
+                  />
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-gray-700">{d.name || "District"}</h4>
+                    <p className="text-[0.6rem] text-gray-500">{d.state || "Uttar Pradesh"}</p>
+                    <div className="flex gap-2 mt-1 flex-wrap">
+                      {d.date && (
+                        <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">{d.date}</span>
+                      )}
+                      {d.amount != null && (
+                        <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">₹{d.amount}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-gray-400 text-xl flex-shrink-0">›</div>
+                </button>
+              ))}
+            </>
           )}
 
-          {toursToShow.map((tour, i) => (
-            <div key={tour.tourID || i} className="flex items-center gap-4 p-4 border-t border-gray-100">
-              <img
-                src={tour.image || "/images/agra.png"}
-                alt={tour.name || "Tour"}
-                className="w-16 h-16 rounded-lg object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "/images/agra.png";
-                }}
-              />
-              <div className="flex-1">
-                <h4 className="text-sm font-medium text-gray-700">
-                  {tour.name || "Tour"}
-                </h4>
-                <p className="text-[0.6rem] text-gray-500">{tour.place || "—"}</p>
-                <div className="flex gap-2 mt-1 flex-wrap">
-                  {tour.date && (
-                    <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">
-                      {tour.date}
-                    </span>
-                  )}
-                  {tour.amount != null && (
-                    <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">
-                      ₹{tour.amount}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="text-gray-400 text-xl flex-shrink-0">›</div>
-            </div>
-          ))}
-
-          <div className="border-t border-gray-200" />
-          <div className="p-4 flex items-center justify-between">
-            <p className="font-medium text-base text-gray-700">Booking history</p>
-            <div className="text-gray-400 text-xl">›</div>
-          </div>
+          {purchaseTab === "places" && (
+            <>
+              {purchasedPlaces.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-gray-400">No individual places purchased yet.</p>
+              ) : (
+                purchasedPlaces.map((p, i) => (
+                  <button
+                    key={p.placeID || i}
+                    onClick={() => router.push(`/place/${p.placeID}`)}
+                    className="flex items-center gap-4 p-4 border-t border-gray-100 w-full text-left"
+                  >
+                    <img
+                      src={"/images/agra.png"}
+                      alt={p.name || "Place"}
+                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/images/agra.png"; }}
+                    />
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-gray-700">{p.name || "Place"}</h4>
+                      <div className="flex gap-2 mt-1 flex-wrap">
+                        {p.date && (
+                          <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">{p.date}</span>
+                        )}
+                        {p.amount != null && (
+                          <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">₹{p.amount}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-gray-400 text-xl flex-shrink-0">›</div>
+                  </button>
+                ))
+              )}
+            </>
+          )}
         </div>
 
         {/* Logout */}
@@ -412,7 +480,7 @@ const Profile = () => {
         <CustomerSupport />
 
         <div className="text-center text-xs text-gray-500 pt-3">
-          Current Version: 2.2.1.2001
+          Current Version: 2.3.0.2601
         </div>
       </div>
     </>

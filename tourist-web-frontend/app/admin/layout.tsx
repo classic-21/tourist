@@ -41,7 +41,10 @@ const AdminLayout = ({ children }: Props) => {
         }}>
           <span style={{ fontWeight: 700, fontSize: "16px" }}>Indian Narrated — Admin</span>
           <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            <a href="/admin/tours" style={{ color: "#ccc", textDecoration: "none", fontSize: "14px" }}>Tours</a>
+            <a href="/admin/districts" style={{ color: "#ccc", textDecoration: "none", fontSize: "14px" }}>Districts</a>
+            <a href="/admin/places" style={{ color: "#ccc", textDecoration: "none", fontSize: "14px" }}>Places</a>
+            <a href="/admin/scenics" style={{ color: "#ccc", textDecoration: "none", fontSize: "14px" }}>Scenics</a>
+            <a href="/admin/tours" style={{ color: "#888", textDecoration: "none", fontSize: "12px" }}>Tours (legacy)</a>
             <button
               onClick={() => {
                 sessionStorage.removeItem("adminToken");

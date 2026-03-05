@@ -16,7 +16,7 @@ const generateSlug = (name: string) =>
 
 declare global {
   interface Window {
-    Razorpay: (options: Record<string, unknown>) => { open: () => void };
+    Razorpay: new (options: Record<string, unknown>) => { open: () => void };
   }
 }
 

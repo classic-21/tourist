@@ -18,6 +18,8 @@ export async function checkJWT(
       return;
     }
     (req as GlobalRequestDTO).userID = devUserID;
+    const devUser = await User.findById(devUserID).select("isTestUser");
+    (req as GlobalRequestDTO).isTestUser = devUser?.isTestUser ?? false;
     return next();
   }
 
@@ -69,6 +71,7 @@ export async function checkJWT(
   }
 
   (req as GlobalRequestDTO).userID = userID as string;
+  (req as GlobalRequestDTO).isTestUser = userDetails?.isTestUser ?? false;
 
   next();
 }

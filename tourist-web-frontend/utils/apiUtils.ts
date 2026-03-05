@@ -16,9 +16,31 @@ const apiRoutes: Record<string, string> = {
   getLiked: "likes",
   getLikedIDs: "likes/ids",
   toggleLike: "likes/:tourID",
+  // 3-layer hierarchy
+  getAllDistricts: "districts/all",
+  getDistrict: "districts/:id",
+  createDistrict: "districts",
+  updateDistrict: "districts/:id",
+  deleteDistrict: "districts/:id",
+  getPlace: "places/:id",
+  getPlacesByDistrict: "places/district/:id",
+  createPlace: "places",
+  updatePlace: "places/:id",
+  deletePlace: "places/:id",
+  getScenic: "scenics/:id",
+  getScenicsByPlace: "scenics/place/:id",
+  createScenic: "scenics",
+  updateScenic: "scenics/:id",
+  deleteScenic: "scenics/:id",
+  getScenicAudio: "scenics/:id/audio/:lang",
+  uploadScenicAudio: "scenics/:id/audio",
+  createDistrictOrder: "orders/district/:id",
+  createPlaceOrder: "orders/place/:id",
+  getPurchasedDistricts: "orders/purchased/districts",
+  getPurchasedPlaces: "orders/purchased/places",
 };
 
-const createUrl = (apiRoute: string, id?: string | number): string => {
+const createUrl = (apiRoute: string, id?: string | number, extra?: string): string => {
   let route = apiRoutes[apiRoute];
 
   if (!route) {
@@ -29,6 +51,11 @@ const createUrl = (apiRoute: string, id?: string | number): string => {
   // Replace the :id placeholder only if id is provided
   if (id !== undefined) {
     route = route.replace(":id", id.toString()).replace(":tourID", id.toString());
+  }
+
+  // Replace :lang placeholder if extra is provided
+  if (extra !== undefined) {
+    route = route.replace(":lang", extra);
   }
 
   return process.env.NEXT_PUBLIC_API_ENDPOINT + route;

@@ -14,35 +14,31 @@ const generateSlug = (name: string) =>
     .replace(/\s+/g, "-")
     .replace(/[^\w-]+/g, "");
 
-interface Destination {
+interface District {
   id: string;
   name: string;
-  place: string;
+  state: string;
   amount: number;
-  imgUrl: string | null;
-  navigateTo: string;
+  imageUrl: string | null;
+  placeCount: number;
 }
 
 interface Filters {
   minPrice: string;
   maxPrice: string;
-  place: string;
 }
 
 const Discover = () => {
-  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<Filters>({ minPrice: "", maxPrice: "", place: "" });
-  const [activeFilters, setActiveFilters] = useState<Filters>({ minPrice: "", maxPrice: "", place: "" });
+  const [filters, setFilters] = useState<Filters>({ minPrice: "", maxPrice: "" });
+  const [activeFilters, setActiveFilters] = useState<Filters>({ minPrice: "", maxPrice: "" });
 
   const router = useRouter();
-
-  // Unique places derived from destinations for the place filter dropdown
-  const uniquePlaces = Array.from(new Set(destinations.map((d) => d.place))).sort();
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -54,9 +50,8 @@ const Discover = () => {
 
     const fetchData = async () => {
       try {
-        const [tourList, imageData, likedIdsRes] = await Promise.all([
-          fetchAPI(createUrl("getTourList"), "GET", {}, token),
-          fetchAPI(createUrl("getAllImages"), "GET", {}, token),
+        const [districtList, likedIdsRes] = await Promise.all([
+          fetchAPI(createUrl("getAllDistricts"), "GET", {}, token),
           fetchAPI(createUrl("getLikedIDs"), "GET", {}, token).catch(() => null),
         ]);
 
@@ -64,20 +59,7 @@ const Discover = () => {
           setLikedIds(new Set(likedIdsRes.data));
         }
 
-        const merged: Destination[] = (tourList?.data ?? []).map((item: { id: string; name: string; place: string; mappingID: number; amount: number }) => {
-          const imgs = imageData?.newData?.data?.[item.mappingID];
-          const imgUrl = Array.isArray(imgs) && imgs.length > 0 ? imgs[0].url : null;
-          return {
-            id: item.id,
-            name: item.name,
-            place: item.place,
-            amount: item.amount ?? 0,
-            imgUrl,
-            navigateTo: `/tourDetails/${generateSlug(item.name)}`,
-          };
-        });
-
-        setDestinations(merged);
+        setDistricts(districtList?.data ?? []);
       } catch {
         setError("We are having some trouble loading destinations. Please try again later.");
       } finally {
@@ -102,11 +84,11 @@ const Discover = () => {
     );
   }
 
-  const handleLikeToggle = (tourId: string, newLikedState: boolean) => {
+  const handleLikeToggle = (districtId: string, newLikedState: boolean) => {
     setLikedIds((prev) => {
       const next = new Set(prev);
-      if (newLikedState) next.add(tourId);
-      else next.delete(tourId);
+      if (newLikedState) next.add(districtId);
+      else next.delete(districtId);
       return next;
     });
   };
@@ -117,28 +99,22 @@ const Discover = () => {
   };
 
   const clearFilters = () => {
-    const empty = { minPrice: "", maxPrice: "", place: "" };
+    const empty = { minPrice: "", maxPrice: "" };
     setFilters(empty);
     setActiveFilters(empty);
   };
 
   const hasActiveFilters =
-    activeFilters.minPrice !== "" ||
-    activeFilters.maxPrice !== "" ||
-    activeFilters.place !== "";
+    activeFilters.minPrice !== "" || activeFilters.maxPrice !== "";
 
-  const filtered = destinations.filter((d) => {
-    // Text search
+  const filtered = districts.filter((d) => {
     if (
       searchQuery &&
       !d.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !d.place.toLowerCase().includes(searchQuery.toLowerCase())
+      !d.state.toLowerCase().includes(searchQuery.toLowerCase())
     ) {
       return false;
     }
-    // Place filter
-    if (activeFilters.place && d.place !== activeFilters.place) return false;
-    // Price filter
     if (activeFilters.minPrice !== "" && d.amount < Number(activeFilters.minPrice)) return false;
     if (activeFilters.maxPrice !== "" && d.amount > Number(activeFilters.maxPrice)) return false;
     return true;
@@ -158,7 +134,7 @@ const Discover = () => {
           <Image src={"/icons/Magnifer.svg"} width={20} height={20} alt="search" />
           <input
             type="text"
-            placeholder="Explore landmarks and history..."
+            placeholder="Search districts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -191,21 +167,6 @@ const Discover = () => {
                 Clear all
               </button>
             )}
-          </div>
-
-          {/* Place filter */}
-          <div className="mb-3">
-            <label className="block text-xs text-gray-500 mb-1">Location</label>
-            <select
-              value={filters.place}
-              onChange={(e) => setFilters((f) => ({ ...f, place: e.target.value }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#8E170D] bg-white"
-            >
-              <option value="">All locations</option>
-              {uniquePlaces.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
           </div>
 
           {/* Price range */}
@@ -243,7 +204,7 @@ const Discover = () => {
 
       <div className={styles.bestDestinations} style={{ marginTop: "16px" }}>
         <h3>
-          Best Destinations
+          Districts
           {hasActiveFilters && (
             <span className="text-xs font-normal text-gray-400 ml-2">
               ({filtered.length} result{filtered.length !== 1 ? "s" : ""})
@@ -253,17 +214,17 @@ const Discover = () => {
         {filtered.length === 0 ? (
           <ShowError
             imageSrc="/images/sorry_vector.png"
-            heading="No destinations found"
-            paragraph="No destinations match your search or filters. Try adjusting them."
+            heading="No districts found"
+            paragraph="No districts match your search or filters. Try adjusting them."
           />
         ) : (
           filtered.map((item) => (
             <DestinationCard
               key={item.id}
               destination={item.name}
-              location={item.place}
-              imgUrl={item.imgUrl}
-              navigateTo={item.navigateTo}
+              location={`${item.placeCount} place${item.placeCount !== 1 ? "s" : ""} · ${item.state}`}
+              imgUrl={item.imageUrl}
+              navigateTo={`/district/${item.id}`}
               tourId={item.id}
               isLiked={likedIds.has(item.id)}
               onLikeToggle={handleLikeToggle}

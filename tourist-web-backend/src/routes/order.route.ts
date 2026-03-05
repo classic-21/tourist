@@ -6,20 +6,41 @@ const router = Router();
 
 const orderControllerInstance = new OrderController();
 
-// router.route("/check").get(orderControllerInstance.getRazoropayCreds.bind(orderControllerInstance));s
-
 // Webhook Payment URL
 router
   .route("/verifyPayment/webhook")
   .post(orderControllerInstance.verifyPayment.bind(orderControllerInstance));
 
-// Get all purchased tours for the authenticated user
+// Literal routes (must come before parameterized)
 router
   .route("/purchased")
   .get(
     checkJWT,
     orderControllerInstance.getPurchasedTours.bind(orderControllerInstance)
   );
+
+router
+  .route("/purchased/districts")
+  .get(
+    checkJWT,
+    orderControllerInstance.getPurchasedDistricts.bind(orderControllerInstance)
+  );
+
+router
+  .route("/purchased/places")
+  .get(
+    checkJWT,
+    orderControllerInstance.getPurchasedPlaces.bind(orderControllerInstance)
+  );
+
+// District and Place order creation
+router
+  .route("/district/:districtID")
+  .post(checkJWT, orderControllerInstance.createDistrictOrder.bind(orderControllerInstance));
+
+router
+  .route("/place/:placeID")
+  .post(checkJWT, orderControllerInstance.createPlaceOrder.bind(orderControllerInstance));
 
 // Get Order Details
 router
@@ -38,7 +59,7 @@ router
     )
   );
 
-// Create Order API
+// Create Tour Order API
 router
   .route("/:tourID")
   .post(

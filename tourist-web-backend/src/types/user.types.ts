@@ -11,6 +11,7 @@ export interface UserDTO extends Document {
   email: string;
   password: string;
   refreshToken: string;
+  isTestUser: boolean;
   checkPassword(userEnteredPassword: string): Promise<boolean>;
   generateToken(userID: string, refreshToken?: boolean): string;
 }
@@ -23,4 +24,5 @@ export interface JWTResDTO {
 
 export interface GlobalRequestDTO extends Request {
   userID: string;
+  isTestUser?: boolean;
 }

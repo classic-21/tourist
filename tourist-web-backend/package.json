@@ -8,7 +8,8 @@
     "build": "npx tsc",
     "start:prod": "npx nodemon dist/index.js",
     "start:dev": "concurrently \"npx tsc -w\" \"npx nodemon dist/index.js\"",
-    "prod": "node dist/index.js"
+    "prod": "node dist/index.js",
+    "seed": "npx tsc && node dist/scripts/seed.js"
   },
   "author": "",
   "license": "ISC",

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { createResponseObject } from "../utils/response.js";
 import Like from "../models/like.model.js";
 import Tour from "../models/tour.model.js";
+import District from "../models/district.model.js";
 import { GlobalRequestDTO } from "../types/user.types.js";
 
 export class LikeController {
@@ -19,9 +20,11 @@ export class LikeController {
       return;
     }
 
-    const tourExists = await Tour.findById(tourID);
-    if (!tourExists) {
-      res.status(404).json(createResponseObject(404, "Tour not found"));
+    // Accept both Tour IDs and District IDs (3-layer hierarchy)
+    const tourExists = await Tour.findById(tourID).catch(() => null);
+    const districtExists = tourExists ? null : await District.findOne({ _id: tourID, deletedAt: null }).catch(() => null);
+    if (!tourExists && !districtExists) {
+      res.status(404).json(createResponseObject(404, "Item not found"));
       return;
     }
 
@@ -49,20 +52,34 @@ export class LikeController {
     }
 
     try {
-      const likes = await Like.find({ userID })
-        .populate("tourID", "name place amount mappingID")
-        .sort({ createdAt: -1 });
+      const likes = await Like.find({ userID }).sort({ createdAt: -1 });
 
-      const response = likes.map((like) => {
-        const tour = like.tourID as any;
-        return {
-          tourID: tour?._id,
-          name: tour?.name,
-          place: tour?.place,
-          amount: tour?.amount,
-          mappingID: tour?.mappingID,
-        };
-      });
+      const response = await Promise.all(
+        likes.map(async (like) => {
+          const id = like.tourID?.toString();
+          // Try tour first, then district
+          const tour = await Tour.findById(id).select("name place amount mappingID").catch(() => null);
+          if (tour) {
+            return {
+              tourID: tour._id,
+              name: (tour as any).name,
+              place: (tour as any).place,
+              amount: (tour as any).amount,
+              mappingID: (tour as any).mappingID,
+            };
+          }
+          const district = await District.findOne({ _id: id, deletedAt: null }).select("name state amount").catch(() => null);
+          if (district) {
+            return {
+              tourID: district._id,
+              name: (district as any).name,
+              place: (district as any).state,
+              amount: (district as any).amount,
+            };
+          }
+          return { tourID: id, name: "Unknown", place: "", amount: 0 };
+        })
+      );
 
       res.status(200).json(
         createResponseObject(200, "Liked tours fetched successfully", response)

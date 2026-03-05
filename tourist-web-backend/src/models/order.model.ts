@@ -9,8 +9,15 @@ const orderSchema = new mongoose.Schema(
     },
     tourID: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "Tour", // Referencing the Tour model
+      ref: "Tour",
+    },
+    districtID: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "District",
+    },
+    placeID: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Place",
     },
     amount: {
       type: Number,
